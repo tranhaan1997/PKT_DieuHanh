@@ -1,0 +1,2 @@
+ALTER TABLE "work_orders" ADD COLUMN IF NOT EXISTS "sheetSyncedAt" TIMESTAMP(3);
+ALTER TABLE "work_orders" ADD COLUMN IF NOT EXISTS "sheetSyncError" TEXT;

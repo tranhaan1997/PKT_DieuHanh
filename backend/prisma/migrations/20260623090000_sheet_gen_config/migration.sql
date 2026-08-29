@@ -1,0 +1,3 @@
+ALTER TABLE "periods" ADD COLUMN IF NOT EXISTS "googleSheetStartRow" INTEGER;
+ALTER TABLE "periods" ADD COLUMN IF NOT EXISTS "googleSheetSiteCol" TEXT;
+ALTER TABLE "period_solutions" ADD COLUMN IF NOT EXISTS "genCol" TEXT;

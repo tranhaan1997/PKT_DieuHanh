@@ -1,0 +1,2 @@
+ALTER TABLE "periods" ADD COLUMN IF NOT EXISTS "googleSheetId" TEXT;
+ALTER TABLE "periods" ADD COLUMN IF NOT EXISTS "googleSheetTab" TEXT;

@@ -1,0 +1,43 @@
+﻿# Dependencies
+node_modules/
+
+# Build outputs
+dist/
+build/
+
+# Environment files - NEVER commit secrets
+.env
+.env.local
+.env.*.local
+backend/.env
+
+# Logs
+*.log
+npm-debug.log*
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+
+# TypeScript cache
+*.tsbuildinfo
+
+# Prisma migrations lock (keep migrations, skip lock)
+backend/prisma/migrations/**/migration_lock.toml
+
+# Claude Code local settings
+.claude/
+
+# Yêu cầu nội bộ
+"yeu cau ban dau.md"
+
+# Yeu cau noi bo
+yeu cau ban dau.md
+
+# Claude Code
+.claude/
+.env.portainer

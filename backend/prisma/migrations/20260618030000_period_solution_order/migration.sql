@@ -1,0 +1,1 @@
+ALTER TABLE "period_solutions" ADD COLUMN "order" INTEGER NOT NULL DEFAULT 0;

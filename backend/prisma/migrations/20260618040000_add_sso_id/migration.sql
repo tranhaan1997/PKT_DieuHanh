@@ -1,0 +1,2 @@
+ALTER TABLE "users" ADD COLUMN IF NOT EXISTS "ssoId" TEXT;
+CREATE UNIQUE INDEX IF NOT EXISTS "users_ssoId_key" ON "users"("ssoId");

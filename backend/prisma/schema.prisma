@@ -1,0 +1,324 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  ADMIN
+  SUPERVISOR
+  TECHNICIAN
+  VIEWER
+}
+
+enum PeriodStatus {
+  DRAFT
+  ACTIVE
+  CLOSED
+}
+
+enum WrittenTicketStatus {
+  EMPTY
+  WRITTEN
+}
+
+enum MaterialStatus {
+  EMPTY
+  RECEIVED
+  TRANSFERRED
+}
+
+enum InstallStatus {
+  NOT_STARTED
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+}
+
+enum PhotoStatus {
+  NOT_TAKEN
+  TAKEN
+}
+
+model User {
+  id           Int      @id @default(autoincrement())
+  username     String   @unique
+  fullName     String
+  email        String?  @unique
+  role         UserRole @default(TECHNICIAN)
+  passwordHash String
+  active       Boolean  @default(true)
+  ssoId        String?  @unique
+  department      String?
+  departmentGroup String?
+  phone           String?
+  position        String?
+  lastLogin    DateTime?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  createdPeriods        Period[]       @relation("PeriodCreatedBy")
+  createdWorkOrders     WorkOrder[]    @relation("WorkOrderCreatedBy")
+  officeUpdatedOrders   WorkOrder[]    @relation("WorkOrderOfficeUpdatedBy")
+  techUpdatedOrders     WorkOrder[]    @relation("WorkOrderTechUpdatedBy")
+  periodUsers           PeriodUser[]
+  workOrderLogs         WorkOrderLog[]
+  notifications         Notification[]
+
+  @@map("users")
+}
+
+model Ttkv {
+  code      String   @id
+  name      String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  sites Site[]
+
+  @@map("ttkvs")
+}
+
+model Site {
+  id          Int     @id @default(autoincrement())
+  siteCode    String  @unique
+  siteName    String
+  province    String?
+  district    String?
+  siteType    String?
+  ttkvCode    String?
+  address     String?
+  managerName String?
+  phone       String?
+  sector5G    Int?
+  latitude    Float?
+  longitude   Float?
+  active      Boolean @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  ttkv         Ttkv?        @relation(fields: [ttkvCode], references: [code])
+  periodSites  PeriodSite[]
+  workOrders   WorkOrder[]
+
+  @@index([ttkvCode])
+  @@index([province])
+  @@map("sites")
+}
+
+model Solution {
+  id           Int     @id @default(autoincrement())
+  solutionCode String  @unique
+  solutionName String
+  description  String?
+  expectedDays Int     @default(30)
+  active       Boolean @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  periodSolutions PeriodSolution[]
+  workOrders      WorkOrder[]
+
+  @@map("solutions")
+}
+
+model Period {
+  id          Int          @id @default(autoincrement())
+  periodCode  String       @unique
+  periodName  String
+  startDate   DateTime
+  endDate     DateTime
+  status             PeriodStatus @default(DRAFT)
+  googleSheetId      String?
+  googleSheetTab     String?
+  googleSheetStartRow Int?
+  googleSheetSiteCol  String?
+  createdAt          DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+  createdById Int?
+
+  createdBy       User?            @relation("PeriodCreatedBy", fields: [createdById], references: [id])
+  periodSolutions PeriodSolution[]
+  periodSites     PeriodSite[]
+  periodUsers     PeriodUser[]
+  workOrders      WorkOrder[]
+
+  @@map("periods")
+}
+
+model PeriodUser {
+  periodId Int
+  userId   Int
+
+  period Period @relation(fields: [periodId], references: [id], onDelete: Cascade)
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([periodId, userId])
+  @@map("period_users")
+}
+
+model PeriodSolution {
+  periodId       Int
+  solutionId     Int
+  order          Int     @default(0)
+  sheetTab       String?
+  sheetStartRow  Int?
+  sheetSiteCol   String?
+  sheetWrittenCol String?
+  sheetActCol    String?
+  sheetTtkvCol   String?
+  sheetSiteRecvCol String?
+  sheetProgressStartCol String?
+  // Cột riêng cho từng trường tiến độ thi công — thay cho sheetProgressStartCol
+  // (vốn giả định 7 cột liên tiếp). Dùng cho cả ghi ngược lên Sheet và đọc về.
+  sheetPlanDateCol     String?
+  sheetExecutorCol     String?
+  sheetInstallCol      String?
+  sheetPhotoCol        String?
+  sheetIntegrationCol  String?
+  sheetNoteCol         String?
+  sheetIssueCol        String?
+  sheetCompletedDateCol String?
+  genCol         String?
+
+  period   Period   @relation(fields: [periodId], references: [id], onDelete: Cascade)
+  solution Solution @relation(fields: [solutionId], references: [id], onDelete: Cascade)
+
+  @@id([periodId, solutionId])
+  @@map("period_solutions")
+}
+
+model PeriodSite {
+  periodId Int
+  siteId   Int
+
+  period Period @relation(fields: [periodId], references: [id], onDelete: Cascade)
+  site   Site   @relation(fields: [siteId], references: [id], onDelete: Cascade)
+
+  @@id([periodId, siteId])
+  @@map("period_sites")
+}
+
+model WorkOrder {
+  id                   Int                 @id @default(autoincrement())
+  ticketNo             String              @unique
+  periodId             Int
+  siteId               Int
+  solutionId           Int
+  createdAt            DateTime            @default(now())
+  updatedAt            DateTime            @updatedAt
+  createdById          Int?
+
+  writtenTicket        WrittenTicketStatus @default(EMPTY)
+  actReceivedMaterial  MaterialStatus      @default(EMPTY)
+  ttkvReceivedMaterial MaterialStatus      @default(EMPTY)
+  siteReceivedMaterial MaterialStatus      @default(EMPTY)
+
+  writtenTicketAt      DateTime?
+  actReceivedAt        DateTime?
+  ttkvReceivedAt       DateTime?
+  siteReceivedAt       DateTime?
+
+  planDate             DateTime?
+  executorName         String?
+  installationStatus   InstallStatus       @default(NOT_STARTED)
+  photoStatus          PhotoStatus         @default(NOT_TAKEN)
+  integrationStatus    InstallStatus       @default(NOT_STARTED)
+  note                 String?
+  issue                String?
+  completedDate        DateTime?
+
+  officeUpdatedById    Int?
+  officeUpdatedAt      DateTime?
+  techUpdatedById      Int?
+  techUpdatedAt        DateTime?
+
+  label                String?
+  metadata             Json?
+  sheetRow             Int?
+  sheetSyncedAt        DateTime?
+  sheetSyncError       String?
+
+  period          Period         @relation(fields: [periodId], references: [id])
+  site            Site           @relation(fields: [siteId], references: [id])
+  solution        Solution       @relation(fields: [solutionId], references: [id])
+  createdBy       User?          @relation("WorkOrderCreatedBy", fields: [createdById], references: [id])
+  officeUpdatedBy User?          @relation("WorkOrderOfficeUpdatedBy", fields: [officeUpdatedById], references: [id])
+  techUpdatedBy   User?          @relation("WorkOrderTechUpdatedBy", fields: [techUpdatedById], references: [id])
+  logs            WorkOrderLog[]
+  notifications   Notification[]
+
+  @@index([periodId])
+  @@index([siteId])
+  @@index([solutionId])
+  @@index([periodId, installationStatus])
+  @@map("work_orders")
+}
+
+model WorkOrderLog {
+  id          Int      @id @default(autoincrement())
+  workOrderId Int
+  userId      Int
+  changes     Json
+  createdAt   DateTime @default(now())
+
+  workOrder WorkOrder @relation(fields: [workOrderId], references: [id], onDelete: Cascade)
+  user      User      @relation(fields: [userId], references: [id])
+
+  @@index([workOrderId, createdAt(sort: Desc)])
+  @@map("work_order_logs")
+}
+
+enum NotifType {
+  MATERIAL_UPDATED
+  CONSTRUCTION_COMPLETED
+  INTEGRATION_COMPLETED
+  TICKET_READY
+}
+
+model Notification {
+  id          Int        @id @default(autoincrement())
+  userId      Int
+  workOrderId Int
+  type        NotifType
+  message     String
+  read        Boolean    @default(false)
+  createdAt   DateTime   @default(now())
+
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  workOrder WorkOrder @relation(fields: [workOrderId], references: [id], onDelete: Cascade)
+
+  @@index([userId, read, createdAt(sort: Desc)])
+  @@map("notifications")
+}
+
+model SystemConfig {
+  key       String   @id
+  value     String
+  updatedAt DateTime @updatedAt
+
+  @@map("system_configs")
+}
+
+enum AutoSyncStatus {
+  SUCCESS
+  PARTIAL
+  FAILED
+}
+
+model AutoSyncRun {
+  id               Int            @id @default(autoincrement())
+  startedAt        DateTime
+  finishedAt       DateTime
+  status           AutoSyncStatus
+  periodsProcessed Int            @default(0)
+  totalUpdated     Int            @default(0)
+  errors           Json?
+  updatedItems     Json?
+
+  @@index([startedAt(sort: Desc)])
+  @@map("auto_sync_runs")
+}

@@ -1,0 +1,77 @@
+version: '3.9'
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: dh_postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-dh_telecom}
+      POSTGRES_USER: ${POSTGRES_USER:-dh_user}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-DH_Telecom@2026#Pg}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - '5442:5432'
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U ${POSTGRES_USER:-dh_user} -d ${POSTGRES_DB:-dh_telecom}']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile.dev
+    container_name: dh_backend
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgresql://${POSTGRES_USER:-dh_user}:${POSTGRES_PASSWORD:-DH_Telecom@2026#Pg}@postgres:5432/${POSTGRES_DB:-dh_telecom}
+      JWT_SECRET: ${JWT_SECRET:-dev_jwt_secret_key_minimum_32_chars_long}
+      JWT_EXPIRES_IN: ${JWT_EXPIRES_IN:-15m}
+      JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET:-dev_refresh_secret_key_minimum_32_chars}
+      JWT_REFRESH_EXPIRES_IN: ${JWT_REFRESH_EXPIRES_IN:-7d}
+      PORT: 3011
+      NODE_ENV: development
+      CORS_ORIGIN: '*'
+    volumes:
+      - ./backend:/app
+      - /app/node_modules
+    # port 3011 chỉ expose nội bộ cho debug; traffic chính đi qua nginx
+    expose:
+      - '3011'
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile.dev
+    container_name: dh_frontend
+    restart: unless-stopped
+    depends_on:
+      - backend
+    environment:
+      # Để trống → axios dùng relative URL → Nginx xử lý routing /api/
+      VITE_API_URL: ''
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    expose:
+      - '5183'
+
+  nginx:
+    image: nginx:alpine
+    container_name: dh_nginx
+    restart: unless-stopped
+    depends_on:
+      - backend
+      - frontend
+    ports:
+      - '80:80'
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+
+volumes:
+  postgres_data:

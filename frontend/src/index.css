@@ -1,0 +1,48 @@
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  overscroll-behavior: none;
+  overflow: hidden;
+  height: 100%;
+}
+
+body {
+  font-family: 'Inter', 'Segoe UI', Roboto, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  overscroll-behavior: none;
+  height: 100%;
+  overflow: hidden;
+}
+
+#root {
+  height: 100%;
+  overflow: hidden;
+  min-height: 100dvh;
+}
+
+/* iOS safe area */
+:root {
+  --safe-area-bottom: env(safe-area-inset-bottom, 0px);
+  --safe-area-top: env(safe-area-inset-top, 0px);
+}
+
+/* Native-feel tap highlight */
+* {
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Prevent text selection on tap (buttons, nav) */
+button, a, [role="button"] {
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+/* Smooth scrolling */
+.MuiBox-root, main {
+  -webkit-overflow-scrolling: touch;
+}

@@ -1,0 +1,93 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: dh_postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - dh_net
+
+  backend:
+    image: ghcr.io/${GHCR_OWNER}/dh-backend:${IMAGE_TAG:-latest}
+    container_name: dh_backend
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: "5432"
+      POSTGRES_DB: ${POSTGRES_DB}
+      JWT_SECRET: ${JWT_SECRET}
+      JWT_EXPIRES_IN: ${JWT_EXPIRES_IN:-15m}
+      JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET}
+      JWT_REFRESH_EXPIRES_IN: ${JWT_REFRESH_EXPIRES_IN:-7d}
+      PORT: 3011
+      NODE_ENV: production
+      CORS_ORIGIN: ${CORS_ORIGIN:-*}
+      SSO_CLIENT_ID: ${SSO_CLIENT_ID:-}
+      SSO_CLIENT_SECRET: ${SSO_CLIENT_SECRET:-}
+      SSO_AUTHORIZE_URL: ${SSO_AUTHORIZE_URL:-}
+      SSO_TOKEN_URL: ${SSO_TOKEN_URL:-}
+      SSO_USERINFO_URL: ${SSO_USERINFO_URL:-}
+      SSO_REFRESH_URL: ${SSO_REFRESH_URL:-}
+      SSO_REDIRECT_URI: ${SSO_REDIRECT_URI:-}
+      AMS_API_URL: ${AMS_API_URL:-}
+      AMS_SYNC_TOKEN: ${AMS_SYNC_TOKEN:-}
+      FRONTEND_URL: ${FRONTEND_URL:-}
+      ALLOWED_ORIGINS: ${ALLOWED_ORIGINS:-}
+    ports:
+      - '${BACKEND_PORT:-3011}:3011'
+    networks:
+      - dh_net
+    labels:
+      - 'com.centurylinklabs.watchtower.scope=dh'
+
+  frontend:
+    image: ghcr.io/${GHCR_OWNER}/dh-frontend:${IMAGE_TAG:-latest}
+    container_name: dh_frontend
+    restart: unless-stopped
+    depends_on:
+      - backend
+    ports:
+      - '${FRONTEND_PORT:-5183}:80'
+    networks:
+      - dh_net
+    labels:
+      - 'com.centurylinklabs.watchtower.scope=dh'
+
+  watchtower:
+    image: containrrr/watchtower
+    container_name: dh_watchtower
+    restart: unless-stopped
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    environment:
+      WATCHTOWER_POLL_INTERVAL: 300
+      WATCHTOWER_CLEANUP: 'true'
+      WATCHTOWER_SCOPE: dh
+      REPO_USER: ${GHCR_OWNER}
+      REPO_PASS: ${GHCR_TOKEN:-}
+    networks:
+      - dh_net
+    labels:
+      - 'com.centurylinklabs.watchtower.scope=dh'
+
+networks:
+  dh_net:
+    driver: bridge
+
+volumes:
+  postgres_data:
