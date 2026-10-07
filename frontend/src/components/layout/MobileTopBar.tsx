@@ -8,7 +8,7 @@ import {
   LogoutOutlined, SettingsInputAntennaOutlined, PeopleOutlined, ListAltOutlined, MenuBookOutlined,
   NotificationsOutlined, InventoryOutlined, CheckCircleOutlined, IntegrationInstructionsOutlined,
   Close, DoneAll, AssignmentTurnedInOutlined, GetApp, IosShare, AddBoxOutlined, ArrowBackIosNewOutlined,
-  AssessmentOutlined, HistoryOutlined, ManageHistoryOutlined,
+  AssessmentOutlined, HistoryOutlined, ManageHistoryOutlined, CalculateOutlined,
 } from '@mui/icons-material';
 import { useTopBar } from './TopBarContext';
 import { useNavigate, useLocation } from 'react-router-dom';
@@ -32,6 +32,7 @@ const PAGE_TITLES: Record<string, string> = {
   '/guide': 'Hướng dẫn sử dụng',
   '/sync-history': 'Lịch sử đồng bộ tự động',
   '/activity-history': 'Lịch sử thao tác',
+  '/calculators': 'Tính toán kỹ thuật',
 };
 
 const ROLE_DOT: Record<string, string> = {
@@ -218,6 +219,13 @@ export default function MobileTopBar() {
           >
             <ManageHistoryOutlined sx={{ fontSize: 18, color: palette.text.muted }} />
             <Typography sx={{ fontSize: '0.875rem', fontWeight: 500 }}>Lịch sử thao tác</Typography>
+          </MenuItem>
+          <MenuItem
+            onClick={() => { setAnchorEl(null); navigate('/calculators'); }}
+            sx={{ gap: 1.25, mx: 0.5, mt: 0.5, borderRadius: 1.5, '&:hover': { bgcolor: 'rgba(45,108,223,0.06)' } }}
+          >
+            <CalculateOutlined sx={{ fontSize: 18, color: palette.text.muted }} />
+            <Typography sx={{ fontSize: '0.875rem', fontWeight: 500 }}>Tính toán kỹ thuật</Typography>
           </MenuItem>
           {['ADMIN', 'SUPERVISOR'].includes(user?.role ?? '') && (
             <MenuItem

@@ -18,6 +18,7 @@ import GuidePage from './pages/GuidePage';
 import ReportsPage from './pages/ReportsPage';
 import SyncHistoryPage from './pages/SyncHistoryPage';
 import ActivityHistoryPage from './pages/ActivityHistoryPage';
+import CalculatorsPage from './pages/CalculatorsPage';
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth();
@@ -39,6 +40,7 @@ function AppRoutes() {
           <Route index element={<Navigate to="/lookup" replace />} />
           <Route path="lookup" element={<LookupPage />} />
           <Route path="activity-history" element={<ActivityHistoryPage />} />
+          <Route path="calculators/:code?" element={<CalculatorsPage />} />
           <Route path="*" element={<Navigate to="/lookup" replace />} />
         </Route>
         <Route path="*" element={<Navigate to="/" replace />} />
@@ -59,6 +61,7 @@ function AppRoutes() {
         <Route path="lookup"         element={<LookupPage />} />
         <Route path="activity-history" element={<ActivityHistoryPage />} />
         <Route path="manager-orders" element={<ManagerOrdersPage />} />
+        <Route path="calculators/:code?" element={<CalculatorsPage />} />
         {(user?.role === 'ADMIN' || user?.role === 'SUPERVISOR') && <Route path="guide" element={<GuidePage />} />}
         {(user?.role === 'ADMIN' || user?.role === 'SUPERVISOR') && <Route path="sync-history" element={<SyncHistoryPage />} />}
         {user?.role === 'ADMIN' && <Route path="users" element={<UsersPage />} />}

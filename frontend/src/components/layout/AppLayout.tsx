@@ -12,7 +12,7 @@ import {
   Dashboard, CellTower, Build, CalendarMonth, Assignment,
   ChevronLeft, ChevronRight, LogoutOutlined,
   SettingsInputAntennaOutlined, PeopleOutlined, KeyboardArrowDown, ManageSearch, ListAltOutlined, SettingsOutlined, MenuBookOutlined,
-  AssessmentOutlined, HistoryOutlined, ManageHistoryOutlined,
+  AssessmentOutlined, HistoryOutlined, ManageHistoryOutlined, CalculateOutlined,
 } from '@mui/icons-material';
 import { useNavigate, useLocation, Outlet } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
@@ -58,6 +58,12 @@ const NAV_GROUPS: NavGroup[] = [
     ],
   },
   {
+    label: 'CÔNG CỤ',
+    items: [
+      { label: 'Tính toán kỹ thuật', path: '/calculators', icon: <CalculateOutlined /> },
+    ],
+  },
+  {
     label: 'BÁO CÁO',
     items: [
       { label: 'Báo cáo', path: '/reports', icon: <AssessmentOutlined />, roles: ['ADMIN', 'SUPERVISOR', 'VIEWER'] },
@@ -78,6 +84,7 @@ const TECH_NAV_GROUPS: NavGroup[] = [
     label: 'CÔNG VIỆC',
     items: [
       { label: 'Tra cứu trạm', path: '/lookup', icon: <ManageSearch /> },
+      { label: 'Tính toán kỹ thuật', path: '/calculators', icon: <CalculateOutlined /> },
     ],
   },
 ];
