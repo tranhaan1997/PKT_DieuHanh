@@ -2,7 +2,7 @@ import type { CalcDefinition } from './types';
 
 /**
  * Cấu hình các bài toán định cỡ theo Guideline VTNet — Phần F.
- * Nguyên tắc F.1: kết quả là khối lượng cần (N-need), CHƯA bao gồm dự phòng.
+ * Nguyên tắc áp dụng: kết quả là khối lượng cần (N-need), CHƯA bao gồm dự phòng.
  *
  * Đổi công thức/hệ số: chỉ sửa file này (sau này chuyển xuống DB).
  */
@@ -16,7 +16,7 @@ export const loadPower: CalcDefinition = {
   code: 'load-power',
   name: 'Nhu cầu công suất tải',
   // section: 'F.2',
-  version: 'VTNet-F.2',
+  version: 'v1',
   description: 'Tổng công suất tải AC (P_{AC}) và DC (P_{DC}) của trạm',
   reference: [
     'P_{AC} = P_{load-ac-1} + P_{load-ac-2} + … + P_{load-ac-n}',
@@ -59,7 +59,7 @@ export const ups: CalcDefinition = {
   code: 'ups',
   name: 'Định cỡ hệ thống UPS',
   // section: 'F.3',
-  version: 'VTNet-F.3',
+  version: 'v1',
   description: 'Số module UPS và số lượng ắc quy (VRLA / Lithium)',
   reference: [
     'N_{ups} = P_{AC} / P_{ratedUps}  (làm tròn lên)',
@@ -74,7 +74,7 @@ export const ups: CalcDefinition = {
     'P_{1cell15} / P_{module15}: công suất xả trong 15 phút tại điện áp ngắt theo catalog nhà sản xuất (W)',
     'Hệ số 6 (VRLA): quy đổi 1 cell 2V sang 1 bình 12V (6 cell/bình); Lithium đã tính theo module hoàn chỉnh',
     'P_{AC} (kW) được nhân 1000 để cùng đơn vị W với công suất xả của ắc quy',
-    'Bước 2 — số lượng UPS theo cấu hình dự phòng: chưa áp dụng (theo mục dự phòng trong Guideline)',
+    'Số lượng UPS theo cấu hình dự phòng: chưa áp dụng (chờ quy định dự phòng trong Guideline)',
   ],
   inputs: [
     { kind: 'number', key: 'P_AC', label: 'Tổng công suất tải AC (P_{AC})', unit: 'kW', min: 0, linkFrom: { calc: 'load-power', key: 'Pac' } },
@@ -122,18 +122,18 @@ const RECT_A = { rectUnit: 'A' };
 const RECT_W = { rectUnit: 'W' };
 
 const G_COMMON = 'Thông tin chung';
-const G_BATT = 'Ắc quy (F.4.1 / F.4.2)';
-const G_DC = 'Tủ nguồn DC / Rectifier (F.4.3)';
+const G_BATT = 'Ắc quy';
+const G_DC = 'Tủ nguồn DC / Rectifier';
 
 export const dcRectifier: CalcDefinition = {
   code: 'dc-rectifier',
   name: 'Định cỡ hệ thống DC/Rectifier',
   // section: 'F.4',
-  version: 'VTNet-F.4',
+  version: 'v1',
   description: 'Số tổ ắc quy (Wh / Ah), số tủ nguồn DC và số rectifier',
   reference: [
-    'F.4.1: E_{calc} = (W_{DC} × T_{backup}) × k_{td} × k_{aging} × k_{margin} / (k_{temp} × k_{DOD})',
-    'F.4.2: C_{calc} = (I_{DC} × T_{backup}) × k_{td} × k_{aging} × k_{margin} / (k_{temp} × k_{DOD})',
+    'Theo năng lượng (Wh): E_{calc} = (W_{DC} × T_{backup}) × k_{td} × k_{aging} × k_{margin} / (k_{temp} × k_{DOD})',
+    'Theo dung lượng (Ah): C_{calc} = (I_{DC} × T_{backup}) × k_{td} × k_{aging} × k_{margin} / (k_{temp} × k_{DOD})',
     "k_{td} tra catalogue tại T'_{backup} = T_{backup} / k_{DOD}",
     'N_{battery} = E_{calc} / E_{rated} − k_{round}  (Ah: C_{calc} / C_{rated} − k_{round})',
     'k_{round} = 0 nếu E_{calc} ≤ 1,15 × E_{rated}; k_{round} = 0,15 nếu E_{calc} > 1,15 × E_{rated}',
@@ -141,15 +141,15 @@ export const dcRectifier: CalcDefinition = {
     'N_{rect} = max( ⌈P_{DC} / P_{ratedRect}⌉ + 1 , ⌈(P_{DC} + k × P_{chargingBattDC}) / P_{ratedRect}⌉ )',
   ],
   notes: [
-    'F.4.1 (Wh): áp dụng cho ắc quy LiB hoặc khi so sánh công nghệ ắc quy có điện áp khác nhau',
-    'F.4.2 (Ah): áp dụng cho ắc quy chì, I_{DC} tính tại điện áp hoạt động trung bình của ắc quy',
+    'Tính theo năng lượng (Wh): áp dụng cho ắc quy LiB hoặc khi so sánh công nghệ ắc quy có điện áp khác nhau',
+    'Tính theo dung lượng (Ah): áp dụng cho ắc quy chì, I_{DC} tính tại điện áp hoạt động trung bình của ắc quy',
     'E_{rated} / C_{rated}: năng lượng / dung lượng định mức của 1 tổ ắc quy',
     'Trạm truy nhập: N_{battery} làm tròn lên, tối thiểu 1 tổ; k = 1',
     'Trạm hội tụ, tổng trạm: N_{battery} làm tròn lên số chẵn, mỗi tủ DC tối thiểu 2 tổ; k = 0,5 (cấu hình 2N)',
     'Trạm hội tụ: N_{DC} là số tủ của 1 nhánh — phần nhân đôi 2N tính ở dự phòng',
     'N_{rect} đã gồm +1 rectifier dự phòng theo công thức Guideline',
     'P_{ratedRect} theo Guideline ghi đơn vị A → quy đổi W = dòng định mức × điện áp ra để cùng đơn vị với P_{DC}',
-    'k_{temp}: tra Phụ lục 2 — Hệ số biến đổi dung lượng ắc quy theo nhiệt độ (tạm nhập tay)',
+    'k_{temp}: tra bảng Hệ số biến đổi dung lượng ắc quy theo nhiệt độ (Phụ lục 2 của Guideline) — tạm nhập tay',
     'P_{chargingBattDC}: Guideline chưa nêu công thức — tạm nhập tay',
   ],
   inputs: [
@@ -173,7 +173,7 @@ export const dcRectifier: CalcDefinition = {
     { kind: 'number', key: 'T_backup', label: 'Thời gian dự phòng mong muốn (T_{backup})', unit: 'h', min: 0, group: G_BATT },
     { kind: 'number', key: 'k_DOD', label: 'Hệ số xả sâu (k_{DOD})', min: 0, max: 1, group: G_BATT },
     { kind: 'number', key: 'k_td', label: 'Hệ số thời gian xả (k_{td})', min: 0, group: G_BATT, help: 'Tra catalogue ắc quy', hintFrom: { key: 'T_prime', label: "Tra k_{td} tại T'_{backup}" } },
-    { kind: 'number', key: 'k_temp', label: 'Hệ số hiệu chỉnh nhiệt độ (k_{temp})', min: 0, default: 1, group: G_BATT, help: 'Tra Phụ lục 2' },
+    { kind: 'number', key: 'k_temp', label: 'Hệ số hiệu chỉnh nhiệt độ (k_{temp})', min: 0, default: 1, group: G_BATT, help: 'Tra bảng hệ số biến đổi dung lượng ắc quy theo nhiệt độ (Phụ lục 2)' },
     { kind: 'number', key: 'E_rated', label: 'Năng lượng định mức 1 tổ (E_{rated})', unit: 'Wh', min: 0, group: G_BATT, showIf: BY_WH },
     { kind: 'number', key: 'C_rated', label: 'Dung lượng định mức 1 tổ (C_{rated})', unit: 'Ah', min: 0, group: G_BATT, showIf: BY_AH },
 
@@ -223,30 +223,30 @@ const COOL_ACCESS = { stationType: 'ACCESS' };
 const COOL_HUB = { stationType: ['HUB', 'REGIONAL'] };
 
 const G_HEAT = 'Tải nhiệt thiết bị';
-const G_HUB_HEAT = 'Tải nhiệt bổ sung (F.5.2)';
+const G_HUB_HEAT = 'Tải nhiệt bổ sung (trạm hội tụ, tổng trạm, DC)';
 const G_AC = 'Điều hòa';
 
 export const cooling: CalcDefinition = {
   code: 'cooling',
   name: 'Định cỡ hệ thống làm mát',
   // section: 'F.5',
-  version: 'VTNet-F.5',
+  version: 'v1',
   description: 'Tổng công suất lạnh P_{cool} và số lượng điều hòa',
   reference: [
-    'F.5.1 (truy nhập): P_{cool} = (P_{DC} + P_{AC}) × k_{insure};  k_{insure} = 1,3',
-    'F.5.1: N_{cooling} = P_{cool} / P_{ratedCooling};  P_{ratedCooling} (W) = P_{ratedCooling} (BTU/h) × 0,293',
-    'F.5.2 (hội tụ, tổng trạm, DC): P_{cool} = (P1 + P2 + P3 + P4 + P5) × k_{insure};  k_{insure} = 1,15',
+    'Trạm truy nhập: P_{cool} = (P_{DC} + P_{AC}) × k_{insure};  k_{insure} = 1,3',
+    'Trạm truy nhập: N_{cooling} = P_{cool} / P_{ratedCooling};  P_{ratedCooling} (W) = P_{ratedCooling} (BTU/h) × 0,293',
+    'Trạm hội tụ, tổng trạm, DC: P_{cool} = (P1 + P2 + P3 + P4 + P5) × k_{insure};  k_{insure} = 1,15',
     'P1 = P_{DC} + P_{AC}',
     'P2 = 0,04 × (P_{ratedDCsysN} + P_{ratedACsysN}) + 0,05 × P1',
     'P3 = 0,01 × (P_{ratedDCsysN} + P_{ratedACsysN}) + 0,02 × P1',
     'P4 = 21,53 × S_{fl};  P5 = 100 (W) × k (người)',
-    'F.5.2: N_{cooling} = P_{cool} / ((1 − Tol) × P_{ratedCooling})',
+    'Trạm hội tụ, tổng trạm, DC: N_{cooling} = P_{cool} / ((1 − Tol) × P_{ratedCooling})',
   ],
   notes: [
     'P_{DC} + P_{AC}: tổng công suất nhiệt tỏa ra của phần thiết bị tỏa nhiệt trong không gian nhà trạm cần làm mát',
     'k_{insure}: hệ số dự phòng công suất lạnh cho truyền nhiệt qua tường, trần, sàn… (bao che) và rò lọt không khí qua cửa',
     'N_{cooling}: số lượng điều hòa tính với cấu hình N, làm tròn lên',
-    'F.5.2: P_{cool} là Net Sensible Cooling; P_{ratedCooling} là công suất Net Sensible Cooling định mức của 01 điều hòa ở điều kiện Outdoor',
+    'Trạm hội tụ, tổng trạm, DC: P_{cool} là Net Sensible Cooling; P_{ratedCooling} là công suất Net Sensible Cooling định mức của 01 điều hòa ở điều kiện Outdoor',
     'P2: nhiệt tỏa ra của thiết bị phụ trợ nguồn DC và UPS; P3: nhiệt tỏa ra của hệ thống phân phối nguồn AC',
     'P_{ratedDCsysN} / P_{ratedACsysN}: công suất định mức hệ thống DC / AC cấu hình N',
     'P4: hệ số 21,53 W/m² theo công thức; trường hợp dùng hệ số 10–15 W/m² theo TIA 942-C thì sửa ô hệ số chiếu sáng',
@@ -257,9 +257,9 @@ export const cooling: CalcDefinition = {
     {
       kind: 'select', key: 'stationType', label: 'Loại trạm', default: 'ACCESS',
       options: [
-        { value: 'ACCESS', label: 'Trạm truy nhập (F.5.1 — điều hòa dân dụng)', vars: { k_insure: 1.3 } },
-        { value: 'HUB', label: 'Trạm hội tụ / tổng trạm (F.5.2)', vars: { k_insure: 1.15, k: 3 } },
-        { value: 'REGIONAL', label: 'Tổng trạm khu vực / DC (F.5.2)', vars: { k_insure: 1.15, k: 5 } },
+        { value: 'ACCESS', label: 'Trạm truy nhập (điều hòa dân dụng)', vars: { k_insure: 1.3 } },
+        { value: 'HUB', label: 'Trạm hội tụ / tổng trạm (điều hòa chính xác)', vars: { k_insure: 1.15, k: 3 } },
+        { value: 'REGIONAL', label: 'Tổng trạm khu vực / DC (điều hòa chính xác)', vars: { k_insure: 1.15, k: 5 } },
       ],
     },
     { kind: 'number', key: 'P_DC', label: 'Công suất nhiệt thiết bị DC (P_{DC})', unit: 'W', min: 0, group: G_HEAT, help: 'Thiết bị tỏa nhiệt trong không gian nhà trạm cần làm mát' },
@@ -275,12 +275,12 @@ export const cooling: CalcDefinition = {
     { kind: 'number', key: 'Tol', label: 'Dung sai công suất (Tol)', unit: '%', min: 0, max: 100, group: G_AC, showIf: COOL_HUB, help: 'Theo tiêu chuẩn của nhà sản xuất' },
   ],
   formulas: [
-    // F.5.1 — trạm truy nhập
+    // Trạm truy nhập — điều hòa dân dụng
     { kind: 'expr', key: 'P_cool', label: 'Tổng công suất lạnh', expr: '(P_DC + P_AC) * k_insure', unit: 'W', decimals: 1, primary: true, when: COOL_ACCESS },
     { kind: 'expr', key: 'P_ratedCooling', label: 'Công suất lạnh 1 điều hòa', expr: 'Q_btu * 0.293', unit: 'W', decimals: 1, when: COOL_ACCESS },
     { kind: 'expr', key: 'N_cooling', label: 'Số lượng điều hòa', expr: 'ceil(P_cool / P_ratedCooling)', unit: 'máy', decimals: 0, primary: true, when: COOL_ACCESS },
 
-    // F.5.2 — trạm hội tụ, tổng trạm, DC
+    // Trạm hội tụ, tổng trạm, DC — điều hòa chính xác
     { kind: 'expr', key: 'P1', label: 'P1 — nhiệt tỏa của thiết bị', expr: 'P_DC + P_AC', unit: 'W', decimals: 1, when: COOL_HUB },
     { kind: 'expr', key: 'P2', label: 'P2 — thiết bị phụ trợ nguồn DC và UPS', expr: '0.04 * (P_DCsysN + P_ACsysN) + 0.05 * P1', unit: 'W', decimals: 1, when: COOL_HUB },
     { kind: 'expr', key: 'P3', label: 'P3 — hệ thống phân phối nguồn AC', expr: '0.01 * (P_DCsysN + P_ACsysN) + 0.02 * P1', unit: 'W', decimals: 1, when: COOL_HUB },
@@ -306,7 +306,7 @@ export const totalPower: CalcDefinition = {
   code: 'total-power',
   name: 'Tổng nhu cầu công suất tiêu thụ',
   // section: 'F.6',
-  version: 'VTNet-F.6',
+  version: 'v1',
   description: 'Tổng công suất tiêu thụ P_{Σ} của trạm (kW)',
   reference: [
     'P_{Σ} (kW) = P_{e_cool} + (P_{AC} + P_{chargingBattUps}) / K_{ac-ac} + (P_{DC} + P_{chargingBattDC}) / K_{ac-dc} + P_{bl}',
@@ -368,7 +368,7 @@ export const transformer: CalcDefinition = {
   code: 'transformer',
   name: 'Định cỡ máy biến áp',
   // section: 'F.7',
-  version: 'VTNet-F.7',
+  version: 'v1',
   description: 'Công suất định mức tối thiểu của máy biến áp (kVA)',
   reference: ['S_{đm} (kVA) ≥ P_{Σ} / (cosφ × K_{hc})'],
   notes: [
@@ -410,7 +410,7 @@ export const generator: CalcDefinition = {
   code: 'generator',
   name: 'Định cỡ hệ thống MPĐ',
   // section: 'F.8',
-  version: 'VTNet-F.8',
+  version: 'v1',
   description: 'Công suất MPĐ tối thiểu và số lượng máy phát điện',
   reference: ['N_{gen} = P_{Σ} × k_{ft} / (P_{rated} × cosφ × K_{h})  (làm tròn lên)'],
   notes: [
@@ -460,7 +460,7 @@ export const raisedFloor: CalcDefinition = {
   code: 'raised-floor',
   name: 'Hệ thống sàn nâng',
   // section: 'F.9',
-  version: 'VTNet-F.9',
+  version: 'v1',
   description: 'Diện tích phòng máy tính toán (S_{fl})',
   reference: ['S_{fl} = (S_{eq} / k_{a}) × 1,5  (m²)'],
   notes: [

@@ -31,7 +31,7 @@ export interface NumberInput {
   help?: string;
   showIf?: Condition;
   group?: string;
-  /** Cho phép lấy giá trị từ kết quả bài toán khác, VD Pac của F.2 */
+  /** Cho phép lấy giá trị từ kết quả bài toán khác, VD Pac của bài Nhu cầu công suất tải */
   linkFrom?: { calc: string; key: string };
   /** Hiện giá trị của 1 công thức ngay dưới ô nhập, VD tra k_td tại T' */
   hintFrom?: { key: string; label: string };
@@ -124,7 +124,7 @@ export interface CalcCheck {
 export interface CalcDefinition {
   code: string;
   name: string;
-  /** Mục trong Guideline, VD "F.2" */
+  /** Mã mục trong Guideline (chỉ dùng nội bộ, không hiển thị) */
   section?: string;
   version: string;
   description?: string;

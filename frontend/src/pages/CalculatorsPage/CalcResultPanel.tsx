@@ -104,7 +104,7 @@ export default function CalcResultPanel({ def, result }: Props) {
       {(def.reference?.length || def.notes?.length || def.params?.length) && (
         <Card sx={{ p: { xs: 1.5, sm: 2 }, display: 'flex', flexDirection: 'column', gap: 0.75, bgcolor: palette.cardAlt }}>
           <Typography sx={sectionTitle}>
-            Công thức theo Guideline{def.section ? ` (mục ${def.section})` : ''}
+            Công thức theo Guideline
           </Typography>
           {def.reference?.map((r) => (
             <Typography key={r} sx={{ ...mono, fontSize: '0.85rem', fontWeight: 600, color: palette.text.primary }}><MathText text={r} /></Typography>

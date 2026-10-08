@@ -14,7 +14,7 @@ import type { LinkedValue } from './CalcForm';
 import CalcResultPanel from './CalcResultPanel';
 import MathText from './MathText';
 
-/** Tính kết quả các bài toán nguồn cho những input có linkFrom (VD PAC ← Pac của F.2) */
+/** Tính kết quả các bài toán nguồn cho những input có linkFrom (VD PAC ← Pac của bài Nhu cầu công suất tải) */
 function resolveLinks(def: CalcDefinition, valuesByCode: Record<string, InputValues>): Record<string, LinkedValue> {
   const links: Record<string, LinkedValue> = {};
   for (const input of def.inputs) {
@@ -25,7 +25,7 @@ function resolveLinks(def: CalcDefinition, valuesByCode: Record<string, InputVal
     const r = compute(src, valuesByCode[src.code] ?? defaultValues(src));
     links[input.key] = {
       value: r.scope[key],
-      source: src.section ?? src.name,
+      source: src.name,
       unit: r.steps.find((s) => s.key === key)?.unit,
     };
   }
@@ -37,7 +37,7 @@ export default function CalculatorsPage() {
   const navigate = useNavigate();
   const isMobile = useMediaQuery(useTheme().breakpoints.down('sm'));
   const def = CALCULATORS.find((c) => c.code === code);
-  const calcTitle = (c: CalcDefinition) => `${c.section ? `${c.section} · ` : ''}${c.name}`;
+  const calcTitle = (c: CalcDefinition) => c.name;
 
   // Giữ giá trị đã nhập của từng bài toán khi chuyển qua lại
   const [valuesByCode, setValuesByCode] = useState<Record<string, InputValues>>({});
