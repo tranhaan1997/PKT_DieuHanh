@@ -1,6 +1,8 @@
 import { Alert, Box, Card, Divider, Typography } from '@mui/material';
 import type { CalcDefinition, CalcResult } from '../../calculators/types';
 import { formatNumber } from '../../calculators/expression';
+import { exprToMath, symbolOf } from '../../calculators/symbols';
+import MathText from './MathText';
 import { palette, status, font, radius } from '../../theme/tokens';
 
 interface Props {
@@ -39,25 +41,25 @@ export default function CalcResultPanel({ def, result }: Props) {
                 border: `1px solid ${s.error ? status.error.border : palette.sidebar.line}`,
               }}
             >
-              <Typography sx={{ fontSize: font.caption.size, color: palette.text.secondary, fontWeight: 600 }}>{s.label}</Typography>
+              <Typography sx={{ fontSize: font.caption.size, color: palette.text.secondary, fontWeight: 600 }}><MathText text={s.label} /></Typography>
               <Typography sx={{ fontSize: { xs: '1.5rem', sm: '1.75rem' }, fontWeight: 700, color: palette.brand.dark, lineHeight: 1.2, fontVariantNumeric: 'tabular-nums' }}>
                 {formatNumber(s.value, s.decimals)}
                 <Box component="span" sx={{ fontSize: '0.9rem', fontWeight: 600, ml: 0.75, color: palette.text.secondary }}>{s.unit}</Box>
               </Typography>
               {s.pending && (
-                <Typography sx={{ fontSize: font.caption.size, color: palette.text.muted }}>{s.pending}</Typography>
+                <Typography sx={{ fontSize: font.caption.size, color: palette.text.muted }}><MathText text={s.pending} /></Typography>
               )}
             </Box>
           ))}
         </Box>
         {result.warnings.length > 0 && (
           <Alert severity="warning" sx={{ py: 0 }}>
-            {result.warnings.map((w) => <div key={w}>{w}</div>)}
+            {result.warnings.map((w) => <div key={w}><MathText text={w} /></div>)}
           </Alert>
         )}
         {result.errors.length > 0 && (
           <Alert severity="error" sx={{ py: 0 }}>
-            {result.errors.map((e) => <div key={e}>{e}</div>)}
+            {result.errors.map((e) => <div key={e}><MathText text={e} /></div>)}
           </Alert>
         )}
       </Card>
@@ -70,13 +72,14 @@ export default function CalcResultPanel({ def, result }: Props) {
             {i > 0 && <Divider sx={{ mb: 1 }} />}
             <Box sx={{ display: 'flex', justifyContent: 'space-between', gap: 1, alignItems: 'baseline' }}>
               <Typography sx={{ fontSize: font.body.size, fontWeight: 600, color: palette.text.primary }}>
-                {s.label} <Box component="span" sx={{ color: palette.text.muted, fontWeight: 400 }}>({s.key})</Box>
+                <MathText text={s.label} />{' '}
+                <Box component="span" sx={{ color: palette.text.muted, fontWeight: 400 }}>(<MathText text={symbolOf(def, s.key)} />)</Box>
               </Typography>
               <Typography sx={{ fontSize: font.body.size, fontWeight: 700, whiteSpace: 'nowrap', fontVariantNumeric: 'tabular-nums' }}>
                 {formatNumber(s.value, s.decimals)} {s.unit}
               </Typography>
             </Box>
-            <Typography sx={{ ...mono, color: palette.text.secondary }}>= {s.expr}</Typography>
+            <Typography sx={{ ...mono, color: palette.text.secondary }}>= <MathText text={exprToMath(def, s.expr)} /></Typography>
             {s.terms && s.terms.length > 0 && (
               <Box sx={{ pl: 1.5, my: 0.25, borderLeft: `2px solid ${palette.divider}` }}>
                 {s.terms.map((t, ti) => (
@@ -89,7 +92,7 @@ export default function CalcResultPanel({ def, result }: Props) {
             {s.error ? (
               <Typography sx={{ ...mono, color: status.error.fg }}>{s.error}</Typography>
             ) : s.pending ? (
-              <Typography sx={{ fontSize: font.caption.size, color: palette.text.muted, fontStyle: 'italic' }}>{s.pending}</Typography>
+              <Typography sx={{ fontSize: font.caption.size, color: palette.text.muted, fontStyle: 'italic' }}><MathText text={s.pending} /></Typography>
             ) : (
               <Typography sx={{ ...mono, color: palette.text.muted, wordBreak: 'break-word' }}>= {s.substituted}</Typography>
             )}
@@ -104,14 +107,14 @@ export default function CalcResultPanel({ def, result }: Props) {
             Công thức theo Guideline{def.section ? ` (mục ${def.section})` : ''}
           </Typography>
           {def.reference?.map((r) => (
-            <Typography key={r} sx={{ ...mono, fontSize: '0.85rem', fontWeight: 600, color: palette.text.primary }}>{r}</Typography>
+            <Typography key={r} sx={{ ...mono, fontSize: '0.85rem', fontWeight: 600, color: palette.text.primary }}><MathText text={r} /></Typography>
           ))}
           {def.notes?.map((n) => (
-            <Typography key={n} sx={{ fontSize: font.caption.size, color: palette.text.secondary }}>• {n}</Typography>
+            <Typography key={n} sx={{ fontSize: font.caption.size, color: palette.text.secondary }}>• <MathText text={n} /></Typography>
           ))}
           {def.params?.map((p) => (
             <Typography key={p.key} sx={{ fontSize: font.caption.size, color: palette.text.secondary }}>
-              • {p.label}: <b>{p.key} = {p.value}</b>{p.unit ? ` ${p.unit}` : ''}
+              • <MathText text={p.label} />: <b><MathText text={symbolOf(def, p.key)} /> = {p.value}</b>{p.unit ? ` ${p.unit}` : ''}
             </Typography>
           ))}
           <Typography sx={{ fontSize: font.caption.size, color: palette.text.faint, mt: 0.5 }}>Phiên bản công thức: {def.version}</Typography>

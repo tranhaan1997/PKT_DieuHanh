@@ -8,6 +8,8 @@ import type {
 } from '../../calculators/types';
 import { emptyRow, rowOverrides, visibleInputs } from '../../calculators/engine';
 import { formatNumber } from '../../calculators/expression';
+import { plainMath, symbolOf } from '../../calculators/symbols';
+import MathText from './MathText';
 import { palette, font } from '../../theme/tokens';
 
 /** Giá trị lấy được từ bài toán khác cho input có linkFrom */
@@ -36,17 +38,22 @@ function NumberField({ input, value, onChange, link, hint }: {
   return (
     <Box sx={{ minWidth: 0 }}>
       <TextField
-        label={input.label}
+        label={<MathText text={input.label} />}
         size="small"
         fullWidth
         value={value ?? ''}
         onChange={(e) => onChange(e.target.value)}
-        helperText={input.help}
-        slotProps={{ ...unitAdornment(input.unit), htmlInput: { inputMode: 'decimal' } }}
+        helperText={input.help && <MathText text={input.help} />}
+        slotProps={{
+          ...unitAdornment(input.unit),
+          // Nhãn luôn nằm trên ô: nhãn dài không bị đơn vị (kW, V…) đè khi ô trống
+          inputLabel: { shrink: true },
+          htmlInput: { inputMode: 'decimal', 'aria-label': plainMath(input.label) },
+        }}
       />
       {hint && (
         <Typography sx={{ mt: 0.5, px: 0.75, fontSize: font.caption.size, fontWeight: 600, color: palette.brand.dark }}>
-          {hint}
+          <MathText text={hint} />
         </Typography>
       )}
       {link && (
@@ -66,22 +73,26 @@ function NumberField({ input, value, onChange, link, hint }: {
   );
 }
 
-function SelectField({ input, value, onChange }: { input: SelectInput; value: unknown; onChange: (v: string) => void }) {
+function SelectField({ def, input, value, onChange }: {
+  def: CalcDefinition; input: SelectInput; value: unknown; onChange: (v: string) => void;
+}) {
   const selected = input.options.find((o) => o.value === value);
   const varsText = selected?.vars
-    ? Object.entries(selected.vars).map(([k, v]) => `${k} = ${v}`).join(', ')
+    ? Object.entries(selected.vars).map(([k, v]) => `${symbolOf(def, k)} = ${v}`).join(', ')
     : undefined;
+  const helper = [varsText, input.help].filter(Boolean).join(' · ');
   return (
     <TextField
       select
-      label={input.label}
+      label={<MathText text={input.label} />}
       size="small"
       fullWidth
       value={value ?? ''}
       onChange={(e) => onChange(e.target.value)}
-      helperText={[varsText, input.help].filter(Boolean).join(' · ') || undefined}
+      helperText={helper ? <MathText text={helper} /> : undefined}
+      slotProps={{ select: { 'aria-label': plainMath(input.label) } }}
     >
-      {input.options.map((o) => <MenuItem key={o.value} value={o.value}>{o.label}</MenuItem>)}
+      {input.options.map((o) => <MenuItem key={o.value} value={o.value}><MathText text={o.label} /></MenuItem>)}
     </TextField>
   );
 }
@@ -99,16 +110,16 @@ function TableField({ input, rows, onChange, rowDefaults }: {
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
       <Box sx={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', gap: 1 }}>
-        <Typography sx={sectionTitle}>{input.label}</Typography>
+        <Typography sx={sectionTitle}><MathText text={input.label} /></Typography>
         <Typography sx={helpText}>{rows.length} dòng</Typography>
       </Box>
-      {input.help && <Typography sx={helpText}>{input.help}</Typography>}
+      {input.help && <Typography sx={helpText}><MathText text={input.help} /></Typography>}
 
       {/* Header (desktop) */}
       <Box sx={{ display: { xs: 'none', sm: 'grid' }, gridTemplateColumns: desktopCols, gap: 1, px: 0.5 }}>
         {input.columns.map((c) => (
           <Typography key={c.key} sx={{ fontSize: font.caption.size, fontWeight: 600, color: palette.text.secondary }}>
-            {c.label}{c.unit ? ` (${c.unit})` : ''}
+            <MathText text={c.label} />{c.unit ? ` (${c.unit})` : ''}
           </Typography>
         ))}
       </Box>
@@ -129,7 +140,8 @@ function TableField({ input, rows, onChange, rowDefaults }: {
         >
           {input.columns.map((c) => {
             const isText = c.type === 'text';
-            const label = isMobile ? `${c.label}${c.unit ? ` (${c.unit})` : ''}` : undefined;
+            const label = isMobile ? <MathText text={`${c.label}${c.unit ? ` (${c.unit})` : ''}`} /> : undefined;
+            const ariaLabel = `${plainMath(c.label)} dòng ${idx + 1}`;
             return (
               <Box
                 key={c.key}
@@ -144,7 +156,7 @@ function TableField({ input, rows, onChange, rowDefaults }: {
                   <TextField
                     select size="small" fullWidth
                     label={label}
-                    slotProps={{ htmlInput: { 'aria-label': `${c.label} dòng ${idx + 1}` } }}
+                    slotProps={{ htmlInput: { 'aria-label': ariaLabel } }}
                     value={row[c.key] ?? ''}
                     onChange={(e) => setCell(idx, c.key, e.target.value)}
                   >
@@ -154,10 +166,10 @@ function TableField({ input, rows, onChange, rowDefaults }: {
                   <TextField
                     size="small" fullWidth
                     label={isText ? undefined : label}
-                    placeholder={isText ? c.label : undefined}
+                    placeholder={isText ? plainMath(c.label) : undefined}
                     value={row[c.key] ?? ''}
                     onChange={(e) => setCell(idx, c.key, e.target.value)}
-                    slotProps={{ htmlInput: { 'aria-label': `${c.label} dòng ${idx + 1}`, inputMode: isText ? undefined : 'decimal' } }}
+                    slotProps={{ htmlInput: { 'aria-label': ariaLabel, inputMode: isText ? undefined : 'decimal' } }}
                   />
                 )}
               </Box>
@@ -208,7 +220,7 @@ export default function CalcForm({ def, values, onChange, links = {}, result }: 
         return (
           <Box key={gi} sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
             {g.name && (
-              <Typography sx={{ ...sectionTitle, pb: 0.75, borderBottom: `1px solid ${palette.divider}` }}>{g.name}</Typography>
+              <Typography sx={{ ...sectionTitle, pb: 0.75, borderBottom: `1px solid ${palette.divider}` }}><MathText text={g.name} /></Typography>
             )}
             {simple.length > 0 && (
               <Box sx={{ display: 'grid', gap: 1.5, gridTemplateColumns: 'repeat(auto-fill, minmax(min(100%, 260px), 1fr))' }}>
@@ -220,7 +232,7 @@ export default function CalcForm({ def, values, onChange, links = {}, result }: 
                       onChange={(v) => onChange(input.key, v)}
                     />
                   ) : input.kind === 'select' ? (
-                    <SelectField key={input.key} input={input} value={values[input.key]} onChange={(v) => onChange(input.key, v)} />
+                    <SelectField key={input.key} def={def} input={input} value={values[input.key]} onChange={(v) => onChange(input.key, v)} />
                   ) : null,
                 )}
               </Box>

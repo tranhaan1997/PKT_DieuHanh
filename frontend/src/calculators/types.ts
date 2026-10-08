@@ -18,10 +18,12 @@ export interface SelectOption {
   note?: string;
 }
 
+/** symbol: ký hiệu hiển thị dạng `X_{abc}` khi tự suy từ key không đúng (xem symbols.ts) */
 export interface NumberInput {
   kind: 'number';
   key: string;
   label: string;
+  symbol?: string;
   unit?: string;
   default?: number;
   min?: number;
@@ -77,6 +79,7 @@ export interface ExprFormula {
   kind: 'expr';
   key: string;
   label: string;
+  symbol?: string;
   expr: string;
   unit?: string;
   decimals?: number;
@@ -91,6 +94,7 @@ export interface SumFormula {
   kind: 'sum';
   key: string;
   label: string;
+  symbol?: string;
   table: string;
   rowExpr: string;
   where?: { column: string; equals: string };
@@ -105,6 +109,7 @@ export type CalcFormula = ExprFormula | SumFormula;
 export interface CalcParam {
   key: string;
   label: string;
+  symbol?: string;
   value: number;
   unit?: string;
 }

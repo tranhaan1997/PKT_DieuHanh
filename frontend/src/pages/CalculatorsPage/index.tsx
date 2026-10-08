@@ -12,6 +12,7 @@ import { palette, font, radius } from '../../theme/tokens';
 import CalcForm from './CalcForm';
 import type { LinkedValue } from './CalcForm';
 import CalcResultPanel from './CalcResultPanel';
+import MathText from './MathText';
 
 /** Tính kết quả các bài toán nguồn cho những input có linkFrom (VD PAC ← Pac của F.2) */
 function resolveLinks(def: CalcDefinition, valuesByCode: Record<string, InputValues>): Record<string, LinkedValue> {
@@ -68,13 +69,13 @@ export default function CalculatorsPage() {
           label="Bài toán"
           value={def.code}
           onChange={(e) => navigate(`/calculators/${e.target.value}`)}
-          slotProps={{ select: { renderValue: () => calcTitle(def) } }}
+          slotProps={{ select: { renderValue: () => <MathText text={calcTitle(def)} /> } }}
         >
           {CALCULATORS.map((c) => (
             <MenuItem key={c.code} value={c.code} sx={{ display: 'block', whiteSpace: 'normal', py: 1 }}>
-              <Typography sx={{ fontSize: font.body.size, fontWeight: 700 }}>{calcTitle(c)}</Typography>
+              <Typography sx={{ fontSize: font.body.size, fontWeight: 700 }}><MathText text={calcTitle(c)} /></Typography>
               {c.description && (
-                <Typography sx={{ fontSize: font.caption.size, color: palette.text.muted }}>{c.description}</Typography>
+                <Typography sx={{ fontSize: font.caption.size, color: palette.text.muted }}><MathText text={c.description} /></Typography>
               )}
             </MenuItem>
           ))}
@@ -96,10 +97,10 @@ export default function CalculatorsPage() {
                 }}
               >
                 <Typography sx={{ fontSize: font.body.size, fontWeight: 700, color: active ? palette.brand.dark : palette.text.primary }}>
-                  {calcTitle(c)}
+                  <MathText text={calcTitle(c)} />
                 </Typography>
                 {c.description && (
-                  <Typography sx={{ fontSize: font.caption.size, color: palette.text.muted }}>{c.description}</Typography>
+                  <Typography sx={{ fontSize: font.caption.size, color: palette.text.muted }}><MathText text={c.description} /></Typography>
                 )}
               </ButtonBase>
             );
