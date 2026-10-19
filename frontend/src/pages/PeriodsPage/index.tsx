@@ -14,6 +14,7 @@ import PeriodDetail from './PeriodDetail';
 import PageHeader from '../../components/ui/PageHeader';
 import DataGrid from '../../components/ui/DataGrid';
 import MobileList from '../../components/ui/MobileList';
+import { NAV_FAB_BOTTOM } from '../../components/layout/BottomNav';
 import StatusChip from '../../components/ui/StatusChip';
 import { StatusCellRenderer, ChipListCellRenderer, ActionsCellRenderer } from '../../components/ui/gridCells';
 import { palette } from '../../theme/tokens';
@@ -271,7 +272,7 @@ export default function PeriodsPage() {
       {isMobile && canEdit && (
         <Fab color="primary" size="medium"
           onClick={() => { setForm(emptyForm); setFormErrors(emptyErrors); setSelectedSupervisors([]); setDialogOpen(true); }}
-          sx={{ position: 'fixed', bottom: 96, right: 16, zIndex: 1100, boxShadow: '0 4px 16px rgba(45,108,223,0.4)' }}>
+          sx={{ position: 'fixed', bottom: NAV_FAB_BOTTOM, right: 16, zIndex: 1100, boxShadow: '0 4px 16px rgba(45,108,223,0.4)' }}>
           <Add />
         </Fab>
       )}

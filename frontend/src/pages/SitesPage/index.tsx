@@ -18,6 +18,7 @@ import PageHeader from '../../components/ui/PageHeader';
 import Toolbar from '../../components/ui/Toolbar';
 import DataGrid from '../../components/ui/DataGrid';
 import MobileList from '../../components/ui/MobileList';
+import { NAV_FAB_BOTTOM } from '../../components/layout/BottomNav';
 import StatusChip from '../../components/ui/StatusChip';
 import { StatusCellRenderer, ActionsCellRenderer } from '../../components/ui/gridCells';
 import { palette } from '../../theme/tokens';
@@ -365,7 +366,7 @@ export default function SitesPage() {
         <Fab
           color="primary" size="medium"
           onClick={() => { setEditSite(emptyForm); setIsEdit(false); setDialogOpen(true); }}
-          sx={{ position: 'fixed', bottom: 96, right: 16, zIndex: 1100, boxShadow: '0 4px 16px rgba(45,108,223,0.4)' }}
+          sx={{ position: 'fixed', bottom: NAV_FAB_BOTTOM, right: 16, zIndex: 1100, boxShadow: '0 4px 16px rgba(45,108,223,0.4)' }}
         >
           <Add />
         </Fab>

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import {
   Box, List, ListItemButton, ListItemIcon, ListItemText,
   Typography, IconButton, Avatar, Tooltip, Menu, MenuItem, Divider,
@@ -8,11 +8,12 @@ import BottomNav, { NAV_BOTTOM_OFFSET } from './BottomNav';
 import MobileTopBar from './MobileTopBar';
 import NotificationBell from './NotificationBell';
 import { TopBarProvider } from './TopBarContext';
+import { NAV_GROUPS, TECH_NAV_GROUPS, allNav, visibleGroups } from './navConfig';
+import type { NavItem as NavItemDef } from './navConfig';
 import {
-  Dashboard, CellTower, Build, CalendarMonth, Assignment,
   ChevronLeft, ChevronRight, LogoutOutlined,
-  SettingsInputAntennaOutlined, PeopleOutlined, KeyboardArrowDown, ManageSearch, ListAltOutlined, SettingsOutlined, MenuBookOutlined,
-  AssessmentOutlined, HistoryOutlined, ManageHistoryOutlined, CalculateOutlined,
+  SettingsInputAntennaOutlined, PeopleOutlined, KeyboardArrowDown, MenuBookOutlined,
+  HistoryOutlined, ManageHistoryOutlined,
 } from '@mui/icons-material';
 import { useNavigate, useLocation, Outlet } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
@@ -23,76 +24,6 @@ import { getBackendVersion, frontendVersion } from '../../api/version';
 const DRAWER_WIDTH = 248;
 const MINI_WIDTH = 62;
 const SB = palette.sidebar;
-
-/* ─── Nav structure ─────────────────────────────────────────────── */
-interface NavItem { label: string; path: string; icon: React.ReactNode; exact?: boolean; adminOnly?: boolean; roles?: string[]; }
-interface NavGroup { label: string; adminOnly?: boolean; items: NavItem[]; }
-
-const NAV_GROUPS: NavGroup[] = [
-  {
-    label: 'TỔNG QUAN',
-    items: [
-      { label: 'Dashboard', path: '/', icon: <Dashboard />, exact: true },
-    ],
-  },
-  {
-    label: 'DANH MỤC',
-    items: [
-      { label: 'Danh mục TTKV', path: '/admin/ttkvs', icon: <SettingsInputAntennaOutlined /> },
-      { label: 'Danh mục trạm', path: '/sites', icon: <CellTower /> },
-      { label: 'Giải pháp', path: '/solutions', icon: <Build /> },
-    ],
-  },
-  {
-    label: 'VẬT TƯ',
-    items: [
-      { label: 'Phiếu vật tư', path: '/manager-orders', icon: <ListAltOutlined /> },
-    ],
-  },
-  {
-    label: 'QUẢN LÝ',
-    items: [
-      { label: 'Tra cứu trạm', path: '/lookup', icon: <ManageSearch /> },
-      { label: 'Phiếu thi công', path: '/work-orders', icon: <Assignment /> },
-      { label: 'Kỳ thực hiện', path: '/periods', icon: <CalendarMonth /> },
-    ],
-  },
-  {
-    label: 'CÔNG CỤ',
-    items: [
-      { label: 'Tính toán kỹ thuật', path: '/calculators', icon: <CalculateOutlined /> },
-    ],
-  },
-  {
-    label: 'BÁO CÁO',
-    items: [
-      { label: 'Báo cáo', path: '/reports', icon: <AssessmentOutlined />, roles: ['ADMIN', 'SUPERVISOR', 'VIEWER'] },
-    ],
-  },
-  {
-    label: 'QUẢN TRỊ',
-    adminOnly: true,
-    items: [
-      { label: 'Người dùng', path: '/users', icon: <PeopleOutlined />, adminOnly: true },
-      { label: 'Cài đặt hệ thống', path: '/admin/settings', icon: <SettingsOutlined />, adminOnly: true },
-    ],
-  },
-];
-
-const TECH_NAV_GROUPS: NavGroup[] = [
-  {
-    label: 'CÔNG VIỆC',
-    items: [
-      { label: 'Tra cứu trạm', path: '/lookup', icon: <ManageSearch /> },
-      { label: 'Tính toán kỹ thuật', path: '/calculators', icon: <CalculateOutlined /> },
-    ],
-  },
-];
-
-const allNav: NavItem[] = [
-  ...NAV_GROUPS.flatMap((g) => g.items),
-  ...TECH_NAV_GROUPS.flatMap((g) => g.items),
-].filter((item, idx, arr) => arr.findIndex((i) => i.path === item.path) === idx);
 
 const ROLE_LABEL: Record<string, string> = {
   ADMIN: 'Quản trị hệ thống',
@@ -114,7 +45,7 @@ function avatarBg(name: string) {
 }
 
 /* ─── Sidebar nav item ──────────────────────────────────────────── */
-function NavItem({ item, collapsed, active }: { item: NavItem; collapsed: boolean; active: boolean }) {
+function NavItem({ item, collapsed, active }: { item: NavItemDef; collapsed: boolean; active: boolean }) {
   const navigate = useNavigate();
 
   const btn = (
@@ -178,7 +109,7 @@ export default function AppLayout() {
     staleTime: 5 * 60_000,
   });
 
-  const activeGroups = user?.role === 'TECHNICIAN' ? TECH_NAV_GROUPS : NAV_GROUPS;
+  const activeGroups = visibleGroups(user?.role === 'TECHNICIAN' ? TECH_NAV_GROUPS : NAV_GROUPS, user?.role);
 
   const isActive = (item: typeof allNav[0]) =>
     item.exact ? location.pathname === item.path : location.pathname.startsWith(item.path);
@@ -193,15 +124,14 @@ export default function AppLayout() {
   const w = collapsed ? MINI_WIDTH : DRAWER_WIDTH;
 
   if (isMobile) {
-    const isTechnician = user?.role === 'TECHNICIAN';
     return (
       <TopBarProvider>
         <Box sx={{ display: 'flex', flexDirection: 'column', height: '100dvh', overflow: 'hidden', bgcolor: 'background.default' }}>
           <MobileTopBar />
-          <Box component="main" sx={{ flex: 1, overflowY: 'auto', overscrollBehavior: 'contain', p: 1.5, pb: isTechnician ? 1.5 : `${NAV_BOTTOM_OFFSET}px` }}>
+          <Box component="main" sx={{ flex: 1, overflowY: 'auto', overscrollBehavior: 'contain', p: 1.5, pb: `${NAV_BOTTOM_OFFSET}px` }}>
             <Outlet />
           </Box>
-          {!isTechnician && <BottomNav />}
+          <BottomNav />
         </Box>
       </TopBarProvider>
     );
@@ -263,12 +193,8 @@ export default function AppLayout() {
           '&::-webkit-scrollbar-thumb': { background: SB.line2, borderRadius: 4 },
         }}>
           <List dense disablePadding>
-            {activeGroups.filter((g) => !(g as any).adminOnly || user?.role === 'ADMIN').map((group) => {
-              const visibleItems = group.items.filter((i) =>
-                (!(i as any).adminOnly || user?.role === 'ADMIN') &&
-                (!i.roles || i.roles.includes(user?.role ?? '')),
-              );
-              if (visibleItems.length === 0) return null;
+            {activeGroups.map((group) => {
+              const visibleItems = group.items;
               return (
                 <Box key={group.label} sx={{ mb: 0.5 }}>
                   {!collapsed && (

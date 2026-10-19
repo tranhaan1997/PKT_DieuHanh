@@ -5,10 +5,9 @@ import {
   Dialog, DialogContent,
 } from '@mui/material';
 import {
-  LogoutOutlined, SettingsInputAntennaOutlined, PeopleOutlined, ListAltOutlined, MenuBookOutlined,
+  LogoutOutlined, SettingsInputAntennaOutlined,
   NotificationsOutlined, InventoryOutlined, CheckCircleOutlined, IntegrationInstructionsOutlined,
   Close, DoneAll, AssignmentTurnedInOutlined, GetApp, IosShare, AddBoxOutlined, ArrowBackIosNewOutlined,
-  AssessmentOutlined, HistoryOutlined, ManageHistoryOutlined, CalculateOutlined,
 } from '@mui/icons-material';
 import { useTopBar } from './TopBarContext';
 import { useNavigate, useLocation } from 'react-router-dom';
@@ -33,6 +32,8 @@ const PAGE_TITLES: Record<string, string> = {
   '/sync-history': 'Lịch sử đồng bộ tự động',
   '/activity-history': 'Lịch sử thao tác',
   '/calculators': 'Tính toán kỹ thuật',
+  '/admin/ttkvs': 'Danh mục TTKV',
+  '/admin/settings': 'Cài đặt hệ thống',
 };
 
 const ROLE_DOT: Record<string, string> = {
@@ -213,65 +214,6 @@ export default function MobileTopBar() {
             </Box>
           </Box>
           <Divider />
-          <MenuItem
-            onClick={() => { setAnchorEl(null); navigate('/activity-history'); }}
-            sx={{ gap: 1.25, mx: 0.5, mt: 0.5, borderRadius: 1.5, '&:hover': { bgcolor: 'rgba(45,108,223,0.06)' } }}
-          >
-            <ManageHistoryOutlined sx={{ fontSize: 18, color: palette.text.muted }} />
-            <Typography sx={{ fontSize: '0.875rem', fontWeight: 500 }}>Lịch sử thao tác</Typography>
-          </MenuItem>
-          <MenuItem
-            onClick={() => { setAnchorEl(null); navigate('/calculators'); }}
-            sx={{ gap: 1.25, mx: 0.5, mt: 0.5, borderRadius: 1.5, '&:hover': { bgcolor: 'rgba(45,108,223,0.06)' } }}
-          >
-            <CalculateOutlined sx={{ fontSize: 18, color: palette.text.muted }} />
-            <Typography sx={{ fontSize: '0.875rem', fontWeight: 500 }}>Tính toán kỹ thuật</Typography>
-          </MenuItem>
-          {['ADMIN', 'SUPERVISOR'].includes(user?.role ?? '') && (
-            <MenuItem
-              onClick={() => { setAnchorEl(null); navigate('/guide'); }}
-              sx={{ gap: 1.25, mx: 0.5, mt: 0.5, borderRadius: 1.5, '&:hover': { bgcolor: 'rgba(45,108,223,0.06)' } }}
-            >
-              <MenuBookOutlined sx={{ fontSize: 18, color: palette.text.muted }} />
-              <Typography sx={{ fontSize: '0.875rem', fontWeight: 500 }}>Hướng dẫn sử dụng</Typography>
-            </MenuItem>
-          )}
-          {['ADMIN', 'SUPERVISOR'].includes(user?.role ?? '') && (
-            <MenuItem
-              onClick={() => { setAnchorEl(null); navigate('/sync-history'); }}
-              sx={{ gap: 1.25, mx: 0.5, mt: 0.5, borderRadius: 1.5, '&:hover': { bgcolor: 'rgba(45,108,223,0.06)' } }}
-            >
-              <HistoryOutlined sx={{ fontSize: 18, color: palette.text.muted }} />
-              <Typography sx={{ fontSize: '0.875rem', fontWeight: 500 }}>Lịch sử đồng bộ tự động</Typography>
-            </MenuItem>
-          )}
-          {['ADMIN', 'SUPERVISOR'].includes(user?.role ?? '') && (
-            <MenuItem
-              onClick={() => { setAnchorEl(null); navigate('/manager-orders'); }}
-              sx={{ gap: 1.25, mx: 0.5, mt: 0.5, borderRadius: 1.5, '&:hover': { bgcolor: 'rgba(45,108,223,0.06)' } }}
-            >
-              <ListAltOutlined sx={{ fontSize: 18, color: palette.text.muted }} />
-              <Typography sx={{ fontSize: '0.875rem', fontWeight: 500 }}>Phiếu vật tư</Typography>
-            </MenuItem>
-          )}
-          {['ADMIN', 'SUPERVISOR', 'VIEWER'].includes(user?.role ?? '') && (
-            <MenuItem
-              onClick={() => { setAnchorEl(null); navigate('/reports'); }}
-              sx={{ gap: 1.25, mx: 0.5, mt: 0.5, borderRadius: 1.5, '&:hover': { bgcolor: 'rgba(45,108,223,0.06)' } }}
-            >
-              <AssessmentOutlined sx={{ fontSize: 18, color: palette.text.muted }} />
-              <Typography sx={{ fontSize: '0.875rem', fontWeight: 500 }}>Báo cáo</Typography>
-            </MenuItem>
-          )}
-          {user?.role === 'ADMIN' && (
-            <MenuItem
-              onClick={() => { setAnchorEl(null); navigate('/users'); }}
-              sx={{ gap: 1.25, mx: 0.5, borderRadius: 1.5, '&:hover': { bgcolor: 'rgba(45,108,223,0.06)' } }}
-            >
-              <PeopleOutlined sx={{ fontSize: 18, color: palette.text.muted }} />
-              <Typography sx={{ fontSize: '0.875rem', fontWeight: 500 }}>Quản lý người dùng</Typography>
-            </MenuItem>
-          )}
           {showInstallItem && (
             <MenuItem
               onClick={handleInstall}
