@@ -78,6 +78,8 @@ services:
       WATCHTOWER_POLL_INTERVAL: 300
       WATCHTOWER_CLEANUP: 'true'
       WATCHTOWER_SCOPE: dh
+      # Docker Engine 29+ từ chối API 1.25 mặc định của watchtower
+      DOCKER_API_VERSION: '1.44'
       REPO_USER: ${GHCR_OWNER}
       REPO_PASS: ${GHCR_TOKEN:-}
     networks:
