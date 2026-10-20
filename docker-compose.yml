@@ -36,9 +36,10 @@ services:
       JWT_REFRESH_EXPIRES_IN: ${JWT_REFRESH_EXPIRES_IN:-7d}
       PORT: 3011
       NODE_ENV: production
-      # Chế độ public: URL người dùng mở app trong LAN. SSO_REDIRECT_URI bỏ trống
-      # → <FRONTEND_URL>/api/auth/sso/callback; COOKIE_SECURE bỏ trống → theo http/https.
-      FRONTEND_URL: ${FRONTEND_URL:-http://192.168.1.27:8080}
+      # Chế độ public: tên miền người dùng mở app (Nginx Proxy Manager 10.248.137.16 →
+      # <server>:FRONTEND_PORT). SSO_REDIRECT_URI bỏ trống → <FRONTEND_URL>/api/auth/sso/callback;
+      # COOKIE_SECURE bỏ trống → theo http/https.
+      FRONTEND_URL: ${FRONTEND_URL:-https://pkt.vienthongact.vn}
       COOKIE_SECURE: ${COOKIE_SECURE:-}
       CORS_ORIGIN: ${CORS_ORIGIN:-*}
       SSO_CLIENT_ID: ${SSO_CLIENT_ID:-AMS_PKT}

@@ -85,7 +85,7 @@ nginx-local.conf       — standalone nginx docker (host.docker.internal)
 
 **SSO (AMS)**: `GET /api/auth/sso/login` → redirect đến AMS. Callback về `GET /api/auth/sso/callback` → frontend route `/auth/callback` (SsoCallbackPage). Env: `SSO_CLIENT_ID`, `SSO_CLIENT_SECRET`, `SSO_REDIRECT_URI`, `AMS_API_URL`, `AMS_SYNC_TOKEN`.
 
-**2 chế độ chạy** (`backend/src/auth/app-url.ts`): `FRONTEND_URL` quyết định — local `http://localhost:5183` (`backend/.env`), public `http://192.168.1.27:8080` (mặc định trong `docker-compose.yml`). `SSO_REDIRECT_URI` bỏ trống → `<FRONTEND_URL>/api/auth/sso/callback`; `COOKIE_SECURE` bỏ trống → Secure chỉ khi `FRONTEND_URL` là https. AMS chỉ nhận 1 Redirect URI mỗi `client_id` → mỗi chế độ cần Redirect URI của nó được đăng ký trên AMS (2 chế độ cùng lúc = 2 client).
+**2 chế độ chạy** (`backend/src/auth/app-url.ts`): `FRONTEND_URL` quyết định — local `http://localhost:5183` (`backend/.env`), public `https://pkt.vienthongact.vn` (mặc định trong `docker-compose.yml`; Nginx Proxy Manager tại `10.248.137.16` — cùng proxy với AMS — chuyển tiếp về server `192.168.1.27:8080`). `SSO_REDIRECT_URI` bỏ trống → `<FRONTEND_URL>/api/auth/sso/callback`; `COOKIE_SECURE` bỏ trống → Secure chỉ khi `FRONTEND_URL` là https. AMS chỉ nhận 1 Redirect URI mỗi `client_id` → mỗi chế độ cần Redirect URI của nó được đăng ký trên AMS (2 chế độ cùng lúc = 2 client).
 
 **`cookie-parser`** load bằng `require()` (không phải ESM import) do xung đột `emitDecoratorMetadata`. `import type { Response } from 'express'` trong controllers cùng lý do.
 

@@ -1,6 +1,6 @@
 // FRONTEND_URL (URL trình duyệt dùng để mở app) quyết định chế độ chạy:
 //   local  → http://localhost:5183     (backend/.env, npm run start:dev)
-//   public → http://192.168.1.27:8080  (docker-compose.yml trên server)
+//   public → https://pkt.vienthongact.vn (docker-compose.yml trên server)
 // SSO_REDIRECT_URI và cờ Secure của cookie suy ra từ đó khi không set riêng.
 
 export function frontendUrl(): string {
