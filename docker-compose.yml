@@ -48,8 +48,7 @@ services:
       AMS_SYNC_TOKEN: ${AMS_SYNC_TOKEN:-}
       FRONTEND_URL: ${FRONTEND_URL:-}
       ALLOWED_ORIGINS: ${ALLOWED_ORIGINS:-}
-    ports:
-      - '${BACKEND_PORT:-3011}:3011'
+    # Không publish port: frontend nginx proxy /api → backend:3011 trong dh_net
     networks:
       - dh_net
     labels:
