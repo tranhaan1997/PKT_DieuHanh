@@ -52,10 +52,12 @@ services:
       AMS_API_URL: ${AMS_API_URL:-https://ams.vienthongact.vn/Api}
       AMS_SYNC_TOKEN: ${AMS_SYNC_TOKEN:-}
       ALLOWED_ORIGINS: ${ALLOWED_ORIGINS:-}
-    # ams.vienthongact.vn có split DNS: DNS public trả IP public (115.75.191.25) mà từ
-    # trong LAN không đi tới được (fetch failed) → ép dùng IP nội bộ của AMS.
+    # ams.vienthongact.vn có split DNS: nội bộ 10.248.137.16, public 115.75.191.25.
+    # Server 192.168.1.27 không có route tới dải 10.248.x / 192.168.0.x (connect timeout)
+    # nhưng ra Internet được → ép dùng IP public. (Máy dải 192.168.0.x thì ngược lại:
+    # chỉ tới được IP nội bộ.) Tên biến giữ AMS_INTERNAL_IP để không phá env đã set.
     extra_hosts:
-      - 'ams.vienthongact.vn:${AMS_INTERNAL_IP:-10.248.137.16}'
+      - 'ams.vienthongact.vn:${AMS_INTERNAL_IP:-115.75.191.25}'
     # Không publish port: frontend nginx proxy /api → backend:3011 trong dh_net
     networks:
       - dh_net
