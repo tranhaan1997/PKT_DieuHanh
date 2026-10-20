@@ -36,18 +36,20 @@ services:
       JWT_REFRESH_EXPIRES_IN: ${JWT_REFRESH_EXPIRES_IN:-7d}
       PORT: 3011
       NODE_ENV: production
+      # Chế độ public: URL người dùng mở app trong LAN. SSO_REDIRECT_URI bỏ trống
+      # → <FRONTEND_URL>/api/auth/sso/callback; COOKIE_SECURE bỏ trống → theo http/https.
+      FRONTEND_URL: ${FRONTEND_URL:-http://192.168.1.27:8080}
       COOKIE_SECURE: ${COOKIE_SECURE:-}
       CORS_ORIGIN: ${CORS_ORIGIN:-*}
-      SSO_CLIENT_ID: ${SSO_CLIENT_ID:-}
+      SSO_CLIENT_ID: ${SSO_CLIENT_ID:-AMS_PKT}
       SSO_CLIENT_SECRET: ${SSO_CLIENT_SECRET:-}
-      SSO_AUTHORIZE_URL: ${SSO_AUTHORIZE_URL:-}
-      SSO_TOKEN_URL: ${SSO_TOKEN_URL:-}
-      SSO_USERINFO_URL: ${SSO_USERINFO_URL:-}
-      SSO_REFRESH_URL: ${SSO_REFRESH_URL:-}
+      SSO_AUTHORIZE_URL: ${SSO_AUTHORIZE_URL:-https://ams.vienthongact.vn/Api/Sso/Authorize}
+      SSO_TOKEN_URL: ${SSO_TOKEN_URL:-https://ams.vienthongact.vn/Api/Sso/Token}
+      SSO_USERINFO_URL: ${SSO_USERINFO_URL:-https://ams.vienthongact.vn/Api/Sso/UserInfo}
+      SSO_REFRESH_URL: ${SSO_REFRESH_URL:-https://ams.vienthongact.vn/Api/Auth/Refresh_Token}
       SSO_REDIRECT_URI: ${SSO_REDIRECT_URI:-}
-      AMS_API_URL: ${AMS_API_URL:-}
+      AMS_API_URL: ${AMS_API_URL:-https://ams.vienthongact.vn/Api}
       AMS_SYNC_TOKEN: ${AMS_SYNC_TOKEN:-}
-      FRONTEND_URL: ${FRONTEND_URL:-}
       ALLOWED_ORIGINS: ${ALLOWED_ORIGINS:-}
     # Không publish port: frontend nginx proxy /api → backend:3011 trong dh_net
     networks:
@@ -62,7 +64,7 @@ services:
     depends_on:
       - backend
     ports:
-      - '${FRONTEND_PORT:-5183}:80'
+      - '${FRONTEND_PORT:-8080}:80'
     networks:
       - dh_net
     labels:

@@ -12,6 +12,7 @@ const SSO_ERROR_LABELS: Record<string, string> = {
   account_inactive: 'Tài khoản bị vô hiệu hóa. Liên hệ quản trị viên.',
   sso_error: 'Lỗi kết nối AMS. Vui lòng thử lại sau.',
   ams_token_expired: 'Phiên đăng nhập AMS đã cũ. Vui lòng đăng xuất khỏi AMS, đăng nhập lại rồi thử SSO lần nữa.',
+  sso_not_configured: 'Máy chủ chưa cấu hình SSO AMS. Liên hệ quản trị viên.',
 };
 
 const FEATURES = [
@@ -33,8 +34,8 @@ export default function LoginPage() {
   }, []);
 
   const handleSsoLogin = () => {
-    const returnTo = encodeURIComponent(window.location.origin);
-    window.location.href = `/api/auth/sso/login?return_to=${returnTo}&t=${Date.now()}`;
+    // Backend tự quay về FRONTEND_URL của chế độ đang chạy (local/public)
+    window.location.href = `/api/auth/sso/login?t=${Date.now()}`;
   };
 
   return (

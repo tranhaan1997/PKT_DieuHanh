@@ -4,6 +4,7 @@ import { PrismaService } from '../prisma/prisma.service';
 import * as crypto from 'crypto';
 import * as bcrypt from 'bcryptjs';
 import { UserRole } from '@prisma/client';
+import { ssoRedirectUri } from './app-url';
 
 interface SsoTokenResponse {
   access_token?: string;
@@ -57,17 +58,22 @@ export class SsoService {
     setInterval(() => this.cleanExpiredStates(), 10 * 60 * 1000);
   }
 
-  getLoginUrl(returnTo: string, callbackUri?: string): string {
+  getLoginUrl(): string {
     const authorizeUrl = process.env.SSO_AUTHORIZE_URL;
     if (!authorizeUrl) throw new Error('SSO_AUTHORIZE_URL is not configured');
+    if (!process.env.SSO_CLIENT_ID)
+      throw new Error('SSO_CLIENT_ID is not configured');
+
+    // AMS chỉ cho đăng ký 1 Redirect URI mỗi client → luôn dùng Redirect URI của
+    // chế độ đang chạy (khớp với bước exchangeCode) và quay về đúng origin của nó.
+    const redirectUri = ssoRedirectUri();
+    const returnTo = new URL(redirectUri).origin; // throw nếu URI sai định dạng
 
     const state = crypto.randomBytes(32).toString('hex');
     this.stateMap.set(state, {
       returnTo,
       expiresAt: Date.now() + 5 * 60 * 1000,
     });
-
-    const redirectUri = callbackUri || process.env.SSO_REDIRECT_URI || '';
 
     const params = new URLSearchParams({
       client_id: process.env.SSO_CLIENT_ID || '',
@@ -97,7 +103,7 @@ export class SsoService {
         client_id: process.env.SSO_CLIENT_ID || '',
         client_secret: process.env.SSO_CLIENT_SECRET || '',
         code,
-        redirect_uri: process.env.SSO_REDIRECT_URI || '',
+        redirect_uri: ssoRedirectUri(),
       }).toString(),
     });
 

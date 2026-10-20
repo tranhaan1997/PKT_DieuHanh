@@ -15,17 +15,11 @@ import { SsoService } from './sso.service';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
 import { JwtRefreshGuard } from './jwt-refresh.guard';
 import { CurrentUser } from '../common/decorators/current-user.decorator';
+import { frontendUrl, secureCookie } from './app-url';
 
 class LoginDto {
   @IsString() @IsNotEmpty() username: string;
   @IsString() @IsNotEmpty() password: string;
-}
-
-// Trình duyệt bỏ qua cookie Secure trên http:// → COOKIE_SECURE=false khi chạy
-// production qua HTTP trong LAN; không set thì Secure theo NODE_ENV như cũ.
-function secureCookie(): boolean {
-  const flag = process.env.COOKIE_SECURE;
-  return flag ? flag === 'true' : process.env.NODE_ENV === 'production';
 }
 
 @Controller('api/auth')
@@ -74,20 +68,16 @@ export class AuthController {
   // ── SSO OAuth 2.0 ─────────────────────────────────────────────────
 
   @Get('sso/login')
-  ssoLogin(@Query('return_to') returnTo: string, @Res() res: Response) {
-    // AMS chỉ cho đăng ký 1 Redirect URI mỗi client → khi có SSO_REDIRECT_URI thì
-    // dùng nó (khớp với bước exchangeCode) và quay về đúng origin của nó, bỏ qua
-    // return_to để không redirect token sang origin khác.
-    const redirectUri = process.env.SSO_REDIRECT_URI;
-    const fallback = process.env.FRONTEND_URL || 'http://localhost:5183';
-    const origin = redirectUri
-      ? new URL(redirectUri).origin
-      : returnTo || fallback;
-    const callbackUri = redirectUri || `${origin}/api/auth/sso/callback`;
-    const loginUrl = this.ssoService.getLoginUrl(origin, callbackUri);
+  ssoLogin(@Res() res: Response) {
     res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate');
     res.setHeader('Pragma', 'no-cache');
-    return res.redirect(loginUrl);
+    try {
+      return res.redirect(this.ssoService.getLoginUrl());
+    } catch (err) {
+      // Thiếu/sai biến SSO trên server → báo rõ ở trang login thay vì trả 500
+      console.error('[SSO login]', err instanceof Error ? err.message : err);
+      return res.redirect(`${frontendUrl()}/login?error=sso_not_configured`);
+    }
   }
 
   @Get('sso/callback')
@@ -97,7 +87,7 @@ export class AuthController {
     @Query('error') error: string,
     @Res() res: Response,
   ) {
-    const frontend = process.env.FRONTEND_URL || 'http://localhost:5183';
+    const frontend = frontendUrl();
 
     if (error) {
       return res.redirect(`${frontend}/login?error=sso_denied`);
