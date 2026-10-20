@@ -11,6 +11,7 @@ const SSO_ERROR_LABELS: Record<string, string> = {
   no_email: 'Tài khoản AMS chưa có email. Liên hệ IT.',
   account_inactive: 'Tài khoản bị vô hiệu hóa. Liên hệ quản trị viên.',
   sso_error: 'Lỗi kết nối AMS. Vui lòng thử lại sau.',
+  ams_token_expired: 'Phiên đăng nhập AMS đã cũ. Vui lòng đăng xuất khỏi AMS, đăng nhập lại rồi thử SSO lần nữa.',
 };
 
 const FEATURES = [

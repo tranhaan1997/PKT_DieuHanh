@@ -68,9 +68,15 @@ export class AuthController {
 
   @Get('sso/login')
   ssoLogin(@Query('return_to') returnTo: string, @Res() res: Response) {
+    // AMS chỉ cho đăng ký 1 Redirect URI mỗi client → khi có SSO_REDIRECT_URI thì
+    // dùng nó (khớp với bước exchangeCode) và quay về đúng origin của nó, bỏ qua
+    // return_to để không redirect token sang origin khác.
+    const redirectUri = process.env.SSO_REDIRECT_URI;
     const fallback = process.env.FRONTEND_URL || 'http://localhost:5183';
-    const origin = returnTo || fallback;
-    const callbackUri = `${origin}/api/auth/sso/callback`;
+    const origin = redirectUri
+      ? new URL(redirectUri).origin
+      : returnTo || fallback;
+    const callbackUri = redirectUri || `${origin}/api/auth/sso/callback`;
     const loginUrl = this.ssoService.getLoginUrl(origin, callbackUri);
     res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate');
     res.setHeader('Pragma', 'no-cache');
@@ -122,14 +128,17 @@ export class AuthController {
         `&amsToken=${encodeURIComponent(tokens.accessToken)}`;
 
       return res.redirect(`${returnTo}/auth/callback#${fragment}`);
-    } catch (err: any) {
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
       const code =
-        err?.message === 'no_email'
+        message === 'no_email'
           ? 'no_email'
-          : err?.message === 'account_inactive'
+          : message === 'account_inactive'
             ? 'account_inactive'
-            : 'sso_error';
-      console.error('[SSO callback]', err?.message || err);
+            : /Token has expired/i.test(message)
+              ? 'ams_token_expired'
+              : 'sso_error';
+      console.error('[SSO callback]', message);
       return res.redirect(`${returnTo}/login?error=${code}`);
     }
   }

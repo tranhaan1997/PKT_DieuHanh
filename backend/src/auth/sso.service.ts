@@ -107,8 +107,19 @@ export class SsoService {
     }
 
     const data = (await resp.json()) as SsoTokenResponse;
+    const accessToken = data.access_token || data.AccessToken || '';
+    // Chỉ log tên field (không log giá trị token) để biết AMS trả về gì khi thiếu token
+    if (!accessToken) {
+      throw new Error(
+        `AMS token exchange returned no access_token (fields: ${Object.keys(data).join(', ')})`,
+      );
+    }
+    // Tạm log để theo dõi lỗi AMS: khi phiên AMS được khôi phục từ cookie bền vững,
+    // Api/Sso/Token trả lại access_token cũ đã hết hạn (UserInfo → "Token has expired.").
+    // Chỉ log iat/exp, không log giá trị token.
+    this.logger.log(`AMS access_token ${this.describeJwt(accessToken)}`);
     return {
-      accessToken: data.access_token || data.AccessToken || '',
+      accessToken,
       refreshToken: data.refresh_token || data.RefreshToken || '',
     };
   }
@@ -117,7 +128,12 @@ export class SsoService {
     const resp = await fetch(process.env.SSO_USERINFO_URL || '', {
       headers: { Authorization: `Bearer ${bearerToken}` },
     });
-    if (!resp.ok) throw new Error(`AMS UserInfo failed: ${resp.status}`);
+    if (!resp.ok) {
+      const body = await resp.text().catch(() => '');
+      throw new Error(
+        `AMS UserInfo failed: ${resp.status} ${body.slice(0, 300)}`,
+      );
+    }
     return resp.json() as Promise<SsoUserInfo>;
   }
 
@@ -142,6 +158,19 @@ export class SsoService {
       accessToken: this.issueJwt(user),
       ssoRefreshToken: newRefreshToken,
     };
+  }
+
+  /** Đọc iat/exp của JWT (không verify chữ ký) — chỉ để log chẩn đoán. */
+  private describeJwt(token: string): string {
+    try {
+      const payload = JSON.parse(
+        Buffer.from(token.split('.')[1], 'base64url').toString(),
+      ) as { iat?: number; exp?: number };
+      const fmt = (s?: number) => (s ? new Date(s * 1000).toISOString() : '?');
+      return `iat=${fmt(payload.iat)} exp=${fmt(payload.exp)} now=${new Date().toISOString()}`;
+    } catch {
+      return '(không phải JWT)';
+    }
   }
 
   async exchangeAmsAccessToken(amsToken: string) {
