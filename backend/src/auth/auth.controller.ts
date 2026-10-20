@@ -21,6 +21,13 @@ class LoginDto {
   @IsString() @IsNotEmpty() password: string;
 }
 
+// Trình duyệt bỏ qua cookie Secure trên http:// → COOKIE_SECURE=false khi chạy
+// production qua HTTP trong LAN; không set thì Secure theo NODE_ENV như cũ.
+function secureCookie(): boolean {
+  const flag = process.env.COOKIE_SECURE;
+  return flag ? flag === 'true' : process.env.NODE_ENV === 'production';
+}
+
 @Controller('api/auth')
 export class AuthController {
   constructor(
@@ -38,7 +45,7 @@ export class AuthController {
     const result = await this.authService.login(dto.username, dto.password);
     res.cookie('dh_refresh_token', result.refreshToken, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
+      secure: secureCookie(),
       sameSite: 'lax',
       maxAge: 7 * 24 * 60 * 60 * 1000,
       path: '/api/auth/refresh',
@@ -117,7 +124,7 @@ export class AuthController {
       const refreshToken = this.authService.signRefreshToken(user);
       res.cookie('dh_refresh_token', refreshToken, {
         httpOnly: true,
-        secure: process.env.NODE_ENV === 'production',
+        secure: secureCookie(),
         sameSite: 'lax',
         maxAge: 7 * 24 * 60 * 60 * 1000,
         path: '/api/auth/refresh',
