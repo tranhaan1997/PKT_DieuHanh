@@ -13,6 +13,7 @@ const SSO_ERROR_LABELS: Record<string, string> = {
   sso_error: 'Lỗi kết nối AMS. Vui lòng thử lại sau.',
   ams_token_expired: 'Phiên đăng nhập AMS đã cũ. Vui lòng đăng xuất khỏi AMS, đăng nhập lại rồi thử SSO lần nữa.',
   sso_not_configured: 'Máy chủ chưa cấu hình SSO AMS. Liên hệ quản trị viên.',
+  ams_unreachable: 'Máy chủ không kết nối được tới AMS. Liên hệ quản trị viên.',
 };
 
 const FEATURES = [

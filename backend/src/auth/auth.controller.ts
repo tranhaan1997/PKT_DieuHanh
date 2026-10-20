@@ -127,6 +127,11 @@ export class AuthController {
       return res.redirect(`${returnTo}/auth/callback#${fragment}`);
     } catch (err) {
       const message = err instanceof Error ? err.message : String(err);
+      // fetch() chỉ báo "fetch failed" — lý do thật (ENOTFOUND, ETIMEDOUT…) nằm ở cause
+      const cause =
+        err instanceof Error && err.cause
+          ? ((err.cause as { code?: string }).code ?? String(err.cause))
+          : '';
       const code =
         message === 'no_email'
           ? 'no_email'
@@ -134,8 +139,10 @@ export class AuthController {
             ? 'account_inactive'
             : /Token has expired/i.test(message)
               ? 'ams_token_expired'
-              : 'sso_error';
-      console.error('[SSO callback]', message);
+              : message === 'fetch failed'
+                ? 'ams_unreachable'
+                : 'sso_error';
+      console.error('[SSO callback]', message, cause ? `(cause: ${cause})` : '');
       return res.redirect(`${returnTo}/login?error=${code}`);
     }
   }
